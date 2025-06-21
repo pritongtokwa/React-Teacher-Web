@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="sidebar">
+    <form action="/manage-data">
+        <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">MANAGE DATA</button>
+    </form>
+    <form action="/create-class">
+        <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">CREATE CLASS</button>
+    </form>
+    <form action="/settings">
+        <button type="submit" class="{% if current_page == 'settings' %}active{% endif %}">SETTINGS</button>
+    </form>
+    <form action="/about">
+        <button type="submit" class="{% if current_page == 'about' %}active{% endif %}">ABOUT</button>
+    </form>
+    <form action="/logout">
+        <button type="submit">QUIT</button>
+    </form>
+</div>
+
+<div class="main">
+    <div class="bottom-text">ECO HEROES</div>
+</div>
+{% endblock %}

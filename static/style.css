@@ -1,0 +1,230 @@
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #2e2d2f;
+  color: white;
+  height: 100vh;
+  display: flex;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 180px;
+  background-color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  gap: 15px;
+}
+
+.sidebar button {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  width: 140px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.sidebar button:hover {
+  background-color: #666;
+}
+
+.sidebar button.active {
+  background-color: #8d8d8d;
+}
+
+.main {
+  flex: 1;
+  background-color: #2e2d2f;
+  position: relative;
+}
+
+.bottom-text {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: 900;
+  color: #111;
+  letter-spacing: 1px;
+}
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  background-color: #2e2d2f;
+}
+
+.login-form {
+  background-color: #1e1e1e;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-form h2 {
+  margin: 0;
+  text-align: center;
+  font-weight: bold;
+}
+
+.login-form input {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.login-form button {
+  padding: 10px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.login-form button:hover {
+  background-color: #666;
+}
+
+.data-table {
+  background-color: white;
+  color: #494949;
+  padding: 30px;
+  border-radius: 10px;
+  margin-left: 20px;
+  margin-top: 50px;
+  margin-right: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.data-table h2 {
+  color: #000;
+}
+
+.data-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  text-align: left;
+  color: #333;
+}
+
+.data-table th {
+  background-color: #e0e0e0;
+  color: #000;
+}
+
+.data-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.class-buttons {
+  margin-bottom: 20px;
+}
+
+.class-buttons form {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.class-buttons button {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.class-buttons button:hover {
+  background-color: #666;
+}
+
+.class-buttons button.active {
+  background-color: #000;
+  color: white;
+}
+
+.popup-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.popup-createclass {
+  background-color: #f9f9f9;
+  color: #494949;
+  height: 80%;
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 10px;
+  margin-left: 20px;
+  margin-top: 100px;
+  margin-bottom: 100px;
+  margin-right: 20px;
+}
+
+.createclass-form {
+  background-color: #f9f9f9;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.createclass-form input {
+  padding: 10px;
+  border: 1px solid #7a7a7a;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.createclass-form button {
+  padding: 10px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.createclass-form button:hover {
+  background-color: #666;
+}
+
+.createclass-form h4 {
+  margin: 0;
+  text-align: left;
+  font-weight: bold;
+}

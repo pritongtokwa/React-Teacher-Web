@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="sidebar">
+    <form action="/manage-data"><button type="submit">MANAGE DATA</button></form>
+    <form action="/create-class"><button type="submit">CREATE CLASS</button></form>
+    <form action="/settings"><button type="submit">SETTINGS</button></form>
+    <form action="/about"><button type="submit">ABOUT</button></form>
+    <form action="/logout"><button type="submit">QUIT</button></form>
+</div>
+
+<div class="main">
+    <div class="data-table">
+        <div class="class-buttons">
+            {% for c in classes %}
+            <form action="/manage-data/{{ c }}" method="get" style="display: inline;">
+                <button type="submit" class="{% if c == classname %}active{% endif %}">{{ c }}</button>
+            </form>
+            {% endfor %}
+        </div>
+        <h2>{{ classname }} - Student Data</h2>
+        {% if data %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Minigame 1</th>
+                    <th>Minigame 2</th>
+                    <th>Minigame 3</th>
+                    <th>Minigame 4</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in data %}
+                <tr>
+                    <td>{{ entry.name }}</td>
+                    <td>{{ entry.minigame1 }}</td>
+                    <td>{{ entry.minigame2 }}</td>
+                    <td>{{ entry.minigame3 }}</td>
+                    <td>{{ entry.minigame4 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No students found in this class.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
