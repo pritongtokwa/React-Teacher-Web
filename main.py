@@ -580,8 +580,8 @@ import mysql.connector
 
 def get_db():
     return mysql.connector.connect(
-        host="mysql.railway.internal",
-        port=3306,
+        host="switchback.proxy.rlwy.net",
+        port=14091,
         user="root",
         password="fROvVkrMziyiAauJkszNrldrBndCjvvI",
         database="railway"
