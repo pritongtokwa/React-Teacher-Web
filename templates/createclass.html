@@ -1,24 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="sidebar">
-    <form action="/manage-data">
-        <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">MANAGE DATA</button>
-    </form>
-    <form action="/create-class">
-        <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">CREATE CLASS</button>
-    </form>
-    <form action="/settings">
-        <button type="submit" class="{% if current_page == 'settings' %}active{% endif %}">SETTINGS</button>
-    </form>
-    <form action="/about">
-        <button type="submit" class="{% if current_page == 'about' %}active{% endif %}">ABOUT</button>
-    </form>
-    <form action="/logout">
-        <button type="submit">QUIT</button>
-    </form>
-</div>
-
 <div class="main">
     <div class="popup-page">
         <div class="popup-createclass">
@@ -26,12 +8,9 @@
                 <p style="color: red; font-weight: bold;">{{ error }}</p>
             {% endif %}
             <form method="POST" class="createclass-form">
-                <h4>Enter Class Name</h4>
-                <input type="text" name="classname" placeholder="Class Name" required><br>
-                <h4>Create Class Password</h4>
-                <input type="password" name="password1" placeholder="Password" required><br>
-                <h4>Confirm Class Password</h4>
-                <input type="password" name="password2" placeholder="Confirm Password" required><br>
+                <br><br>
+                <h4>Enter Section Name</h4><br>
+                <input type="text" name="classname" placeholder="Section Name" required><br>
                 <button type="submit">Create</button>
             </form>
         </div>

@@ -1,28 +1,31 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="sidebar">
-    <form action="/manage-data">
-        <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">MANAGE DATA</button>
-    </form>
-    <form action="/create-class">
-        <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">CREATE CLASS</button>
-    </form>
-    <form action="/settings">
-        <button type="submit" class="{% if current_page == 'settings' %}active{% endif %}">SETTINGS</button>
-    </form>
-    <form action="/about">
-        <button type="submit" class="{% if current_page == 'about' %}active{% endif %}">ABOUT</button>
-    </form>
-    <form action="/logout">
-        <button type="submit">QUIT</button>
-    </form>
-</div>
-
 <div class="main">
-    <div class="popup-page">
-        <h2>Made by Cesa.</h2>
+    <div class="about-container">
+        <h1>📘 About the Dashboard</h1>
+        <p>
+            The <strong>Eco Heroes Teacher Dashboard</strong> is a companion tool for the
+            educational game <em>REACT: Eco Heroes</em>. It helps teachers manage and monitor student engagement and learning progress.
+        </p>
+
+        <div class="features">
+            <h2>🚀 Features</h2>
+            <ul>
+                <li>📊 View individual student minigame scores</li>
+                <li>🧑‍🏫 Organize and manage student classes</li>
+                <li>🔐 Secure data collection using class-based passwords</li>
+            </ul>
+        </div>
+
+        <div class="tech">
+            <h2>🛠️ Technology Stack</h2>
+            <p>Flask · HTML/CSS · PHP · MySQL · Python · RenPY</p>
+        </div>
+
+        <div class="footer-note">
+            <p><em>REACT</em></p>
+        </div>
     </div>
-    <div class="bottom-text">ECO HEROES</div>
 </div>
 {% endblock %}

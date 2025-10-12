@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main">
+    <div class="popup-page">
+        <div class="popup-createstudent">
+
+            <h3>Edit Quiz Question</h3>
+
+            <label for="quiz-select">Select a question to edit:</label>
+            <select id="quiz-select" class="createclass-form">
+                <option value="" disabled selected>-- Choose a question --</option>
+                {% for quiz in quizzes %}
+                    <option value="{{ quiz.id }}"
+                        data-A="{{ quiz.A|default('') }}"
+                        data-B="{{ quiz.B|default('') }}"
+                        data-C="{{ quiz.C|default('') }}"
+                        data-D="{{ quiz.D|default('') }}"
+                        data-correct="{{ quiz.correct_answer|default('A') }}">
+                        {{ quiz.question|default('No question text') }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <form method="POST" id="edit-quiz-form" class="createclass-form">
+                <h4>Question</h4>
+                <textarea name="question" id="question" required style="font-family: inherit;"></textarea><br>
+
+                <h4>Option A</h4>
+                <input type="text" name="A" id="A" required><br>
+
+                <h4>Option B</h4>
+                <input type="text" name="B" id="B" required><br>
+
+                <h4>Option C</h4>
+                <input type="text" name="C" id="C" required><br>
+
+                <h4>Option D</h4>
+                <input type="text" name="D" id="D" required><br>
+
+                <h4>Correct Answer</h4>
+                <select name="correct_answer" id="correct_answer" required>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select><br>
+
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+    <div class="bottom-text">ECO HEROES</div>
+</div>
+
+<script>
+    const select = document.getElementById('quiz-select');
+    const form = document.getElementById('edit-quiz-form');
+
+    select.addEventListener('change', function() {
+        const option = select.selectedOptions[0];
+        form.action = '/update-quiz/' + option.value;
+
+        document.getElementById('question').value = option.text;
+        document.getElementById('A').value = option.dataset.a;
+        document.getElementById('B').value = option.dataset.b;
+        document.getElementById('C').value = option.dataset.c;
+        document.getElementById('D').value = option.dataset.d;
+        document.getElementById('correct_answer').value = option.dataset.correct;
+    });
+</script>
+{% endblock %}

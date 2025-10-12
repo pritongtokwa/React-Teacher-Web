@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main">
+    <div class="popup-page">
+        <div class="popup-createstudent">
+            {% if error %}
+                <p style="color: red; font-weight: bold;">{{ error }}</p>
+            {% endif %}
+            <form method="POST" class="createclass-form">
+                <br><h4>Enter Student Name</h4>
+                <input type="text" name="studname" placeholder="Student Name" required><br>
+                <h4>Enter Student Number</h4>
+                <input type="text" name="studnum" placeholder="Student Number" required pattern="\d*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><br>
+                <h4>Select Section</h4>
+                <select id="section-dropdown" name="section" required>
+                <option value="" selected>Choose Section</option>
+                {% for sec in sections %}
+                <option value="{{ sec.id }}">{{ sec.name }}</option>
+                {% endfor %}
+                </select><br>
+                <h4>Create Password</h4>
+                <input type="password" name="password1" placeholder="Password" required><br>
+                <h4>Confirm Password</h4>
+                <input type="password" name="password2" placeholder="Confirm Password" required><br>
+                <button type="submit">Create</button><br>
+            </form>
+            
+            <form method="POST" class="createclass-form" action="{{ url_for('upload_students') }}" enctype="multipart/form-data">
+                <b>Upload Excel to Add Multiple Students</b>
+                <input type="file" name="excel_file" accept=".xlsx,.xls" required><br>
+                <button type="submit">Upload</button>
+            </form>
+
+            <script>
+            async function refreshSections() {
+                const response = await fetch("/api/sections");
+                const sections = await response.json();
+                const dropdown = document.getElementById("section-dropdown");
+                dropdown.innerHTML = '<option value="">-- Choose Section --</option>';
+                sections.forEach(sec => {
+                    dropdown.innerHTML += `<option value="${sec.id}">${sec.name}</option>`;
+                });
+            }
+            setInterval(refreshSections, 5000);
+            refreshSections();
+            </script>
+
+        </div>
+    </div>
+    <div class="bottom-text">ECO HEROES</div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main">
+    <div class="popup-page">
+        <div class="popup-createstudent">
+
+            <form method="POST" class="createclass-form">
+                <h4>Enter Question</h4>
+                <input type="text" name="question" placeholder="Question" required><br>
+
+                <h4>Option A</h4>
+                <input type="text" name="A" required><br>
+
+                <h4>Option B</h4>
+                <input type="text" name="B" required><br>
+
+                <h4>Option C</h4>
+                <input type="text" name="C" required><br>
+
+                <h4>Option D</h4>
+                <input type="text" name="D" required><br>
+
+                <h4>Correct Answer</h4>
+                <select name="correct_answer" required>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select><br>
+
+                <button type="submit">Add Question</button>
+            </form>
+
+            <form method="POST" class="createclass-form" action="{{ url_for('upload_quiz') }}" enctype="multipart/form-data">
+                <b>Upload Quiz File</b>
+                <input type="file" name="quiz_file" accept=".csv,.xlsx,.xls" required>
+                <button type="submit">Upload</button>
+            </form>
+
+        </div>
+    </div>
+    <div class="bottom-text">ECO HEROES</div>
+</div>
+{% endblock %}

@@ -7,7 +7,37 @@
 </head>
 <body>
     <div class="container">
-        {% block content %}{% endblock %}
+        {% if not hide_sidebar %}
+        <div class="sidebar">
+            <form action="/manage-data">
+                <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">VIEW SCORES</button>
+            </form>
+            <form action="/data-report">
+                <button type="submit" class="{% if current_page == 'data-report' %}active{% endif %}">DATA REPORT</button>
+            </form>
+            <form action="/create-class">
+                <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">CREATE SECTION</button>
+            </form>
+            <form action="/create-student">
+                <button type="submit" class="{% if current_page == 'create-student' %}active{% endif %}">CREATE STUDENT ACCOUNT</button>
+            </form>
+            <form action="/create-quiz">
+                <button type="submit" class="{% if current_page == 'create-quiz' %}active{% endif %}">CREATE QUIZ</button>
+            </form>
+            <form action="/edit-quiz">
+                <button type="submit" class="{% if current_page == 'edit-quiz' %}active{% endif %}">EDIT QUIZ</button>
+            </form>
+            <form action="/about">
+                <button type="submit" class="{% if current_page == 'about' %}active{% endif %}">ABOUT</button>
+            </form>
+            <form action="/logout">
+                <button type="submit">QUIT</button>
+            </form>
+        </div>
+        {% endif %}
+        <div class="main">
+            {% block content %}{% endblock %}
+        </div>
     </div>
 </body>
 </html>

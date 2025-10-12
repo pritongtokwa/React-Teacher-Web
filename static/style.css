@@ -15,6 +15,7 @@ body {
 
 .sidebar {
   width: 180px;
+  height: 120%;
   background-color: #000;
   display: flex;
   flex-direction: column;
@@ -182,7 +183,7 @@ body {
 .popup-createclass {
   background-color: #f9f9f9;
   color: #494949;
-  height: 80%;
+  height: 40%;
   width: 500px;
   display: flex;
   flex-direction: column;
@@ -194,19 +195,52 @@ body {
   margin-right: 20px;
 }
 
-.createclass-form {
+.popup-createstudent {
   background-color: #f9f9f9;
-  padding: 25px;
+  color: #494949;
+  height: 110%;
+  width: 500px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  padding: 5px;
+  border-radius: 10px;
+  margin-left: 20px;
+  margin-top: 200px;
+  margin-bottom: 100px;
+  margin-right: 20px;
 }
 
-.createclass-form input {
-  padding: 10px;
+.createclass-form {
+  background-color: #f9f9f9;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.createclass-form input,
+.createclass-form select {
+  padding: 7px;
   border: 1px solid #7a7a7a;
   border-radius: 5px;
   font-size: 16px;
+}
+
+.createclass-form select {
+  padding: 7px;
+  border: 1px solid #7a7a7a;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #fff;
+  color: #000;
+}
+
+.createclass-form select:invalid {
+  color: #7a7a7a;
+}
+
+.createclass-form select option {
+  color: #000;
 }
 
 .createclass-form button {
@@ -227,4 +261,59 @@ body {
   margin: 0;
   text-align: left;
   font-weight: bold;
+}
+
+.about-container {
+  background-color: #ffffff;
+  padding: 40px;
+  margin: 30px auto;
+  max-width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  color: #003366;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.about-container h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #002244;
+}
+
+.about-container h2 {
+  font-size: 22px;
+  margin-top: 30px;
+  color: #004488;
+}
+
+.about-container p {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.features ul {
+  padding-left: 20px;
+  list-style-type: none;
+}
+
+.features li {
+  margin-bottom: 8px;
+}
+
+.features li::before {
+  content: "✅";
+  margin-right: 10px;
+  color: #00bfff;
+}
+
+.footer-note {
+  margin-top: 40px;
+  font-style: italic;
+  color: #666;
+  text-align: right;
+}
+
+#create-quiz-form textarea {
+    font-family: inherit;
+    font-size: inherit;
 }
