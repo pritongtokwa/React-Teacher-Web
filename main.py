@@ -118,12 +118,13 @@ def class_view(section_id):
             try:
                 cursor.execute("""
                     SELECT st.name AS student_name, s.name AS section_name,
-                        sc.minigame1, sc.minigame2, sc.minigame3, sc.minigame4, sc.quiz
+                    sc.minigame1, sc.minigame2, sc.minigame3, sc.minigame4, sc.quiz
                     FROM students st
-                    LEFT JOIN student_scores sc ON st.id = sc.student_id AND sc.section_id = st.section_id
+                    LEFT JOIN student_scores sc ON st.id = sc.student_id
                     JOIN sections s ON st.section_id = s.id
                     WHERE st.section_id = %s
                     ORDER BY st.name
+
                 """, (section_id,))
                 data = cursor.fetchall() or []
             except Exception as e:
