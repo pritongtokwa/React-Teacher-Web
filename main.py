@@ -81,7 +81,21 @@ def dashboard():
 @app.route("/data-report")
 def data_report():
     return render_template("datareport.html", current_page="data-report")
-    
+
+# ---------------- VIEW SCORES ----------------
+@app.route("/manage-data")
+def manage_data():
+    if "teacher_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute("SELECT id, name FROM sections ORDER BY name")
+        sections = cursor.fetchall()
+    conn.close()
+
+    return render_template("managedata.html", classes=sections, current_page="manage-data", classname=None)
+
 # ---------------- VIEW CLASS DATA ----------------
 @app.route("/manage-data/section/<int:section_id>")
 def class_view(section_id):
