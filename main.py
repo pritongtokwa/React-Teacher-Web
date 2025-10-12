@@ -574,26 +574,12 @@ def api_sections():
     conn.close()
     return jsonify(sections)
 
-# ---------------- PHP API Connection ----------------
-import requests
-
-PHP_API_URL = "https://testing-123.gt.tc/api/db_api.php"
-API_KEY = "e5a4b9f2d3c7a18c9f4a0b6d1e2f9a7c3d8e5f2b9a6c0d3e1f7a8b2c9d4e6a1b"
-
-def send_data(student_number, minigame1, minigame2, minigame3, minigame4, quiz):
-    payload = {
-        "student_number": student_number,
-        "minigame1": minigame1,
-        "minigame2": minigame2,
-        "minigame3": minigame3,
-        "minigame4": minigame4,
-        "quiz": quiz
-    }
-
-    headers = {
-        "Content-Type": "application/json",
-        "X-API-KEY": API_KEY
-    }
-
-    response = requests.post(PHP_API_URL, json=payload, headers=headers)
-    print("Response:", response.text)
+# ---------------- DB Connection ----------------
+def get_db():
+    return mysql.connector.connect(
+        host="mysql.railway.internal",
+        user="root",
+        password="fROvVkrMziyiAauJkszNrldrBndCjvvI",
+        database="railway",
+        port=3306
+    )
