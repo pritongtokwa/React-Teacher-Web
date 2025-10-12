@@ -6,3 +6,4 @@ pandas
 Werkzeug
 openpyxl
 xlrd
+requests
