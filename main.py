@@ -573,3 +573,14 @@ def api_sections():
         sections = cursor.fetchall()
     conn.close()
     return jsonify(sections)
+
+import requests
+
+PHP_API_URL = "https://testing-123.gt.tc/api/db_api.php"
+API_KEY = "secretkey_123123xyz"
+
+def send_data(student, score):
+    payload = {"student": student, "score": score}
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    response = requests.post(PHP_API_URL, json=payload, headers=headers)
+    print(response.text)
