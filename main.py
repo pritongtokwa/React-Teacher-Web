@@ -619,3 +619,44 @@ def test_db():
     except Exception as e:
         return {"error": str(e)}
 
+# ---------------- PHP Connection ----------------
+
+from flask import Flask, request, jsonify
+import mysql.connector
+
+app = Flask(__name__)
+
+# --- Database connection helper ---
+def get_db():
+    return mysql.connector.connect(
+        host="switchback.proxy.rlwy.net",
+        port=14091,
+        user="root",
+        password="fROvVkrMziyiAauJkszNrldrBndCjvvI",
+        database="railway"
+    )
+
+# --- API route for PHP ---
+@app.route("/api/student_scores", methods=["POST"])
+def student_scores():
+    try:
+        data = request.get_json()
+        student_number = data.get("student_number")
+        if not student_number:
+            return jsonify({"error": "Missing student_number"}), 400
+
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT st.name AS student_name, s.name AS section_name,
+                   sc.minigame1, sc.minigame2, sc.minigame3, sc.minigame4, sc.quiz
+            FROM students st
+            LEFT JOIN student_scores sc ON st.id = sc.student_id AND sc.section_id = st.section_id
+            JOIN sections s ON st.section_id = s.id
+            WHERE st.student_number = %s
+        """, (student_number,))
+        result = cursor.fetchall()
+        conn.close()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
