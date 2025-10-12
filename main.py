@@ -81,51 +81,55 @@ def dashboard():
 @app.route("/data-report")
 def data_report():
     return render_template("datareport.html", current_page="data-report")
-
-# ---------------- VIEW SCORES ----------------
-@app.route("/manage-data")
-def manage_data():
-    if "teacher_id" not in session:
-        return redirect(url_for("login"))
-
-    conn = get_db()
-    with conn.cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, name FROM sections ORDER BY name")
-        sections = cursor.fetchall()
-    conn.close()
-
-    return render_template("managedata.html", classes=sections, current_page="manage-data", classname=None)
-
+    
 # ---------------- VIEW CLASS DATA ----------------
 @app.route("/manage-data/section/<int:section_id>")
 def class_view(section_id):
     if "teacher_id" not in session:
         return redirect(url_for("login"))
 
-    conn = get_db()
-    with conn.cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
-        section = cursor.fetchone()
-        if not section:
+    data = []
+    classes = []
+    classname = None
+
+    try:
+        conn = get_db()
+        with conn.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
+            section = cursor.fetchone()
+            if section:
+                classname = section.get("name")
+
+            # Use try-except to prevent crash if table/student_scores missing
+            try:
+                cursor.execute("""
+                    SELECT st.name AS student_name, s.name AS section_name,
+                        sc.minigame1, sc.minigame2, sc.minigame3, sc.minigame4, sc.quiz
+                    FROM students st
+                    LEFT JOIN student_scores sc ON st.id = sc.student_id AND sc.section_id = st.section_id
+                    JOIN sections s ON st.section_id = s.id
+                    WHERE st.section_id = %s
+                    ORDER BY st.name
+                """, (section_id,))
+                data = cursor.fetchall() or []
+            except Exception as e:
+                print("Error fetching student data:", e)
+                data = []
+
+            try:
+                cursor.execute("SELECT id, name FROM sections ORDER BY name")
+                classes = cursor.fetchall() or []
+            except Exception as e:
+                print("Error fetching sections:", e)
+                classes = []
+
+    except Exception as e:
+        print("Database connection error:", e)
+
+    finally:
+        if conn.is_connected():
             conn.close()
-            return "<h2>Section not found.</h2>", 404
-        classname = section["name"]
 
-        cursor.execute("""
-            SELECT st.name AS student_name, s.name AS section_name,
-                sc.minigame1, sc.minigame2, sc.minigame3, sc.minigame4, sc.quiz
-            FROM students st
-            LEFT JOIN student_scores sc ON st.id = sc.student_id AND sc.section_id = st.section_id
-            JOIN sections s ON st.section_id = s.id
-            WHERE st.section_id = %s
-            ORDER BY st.name
-        """, (section_id,))
-        data = cursor.fetchall()
-
-        cursor.execute("SELECT id, name FROM sections ORDER BY name")
-        classes = cursor.fetchall()
-
-    conn.close()
     return render_template("classdata.html", data=data, classname=classname, classes=classes, current_page="manage-data")
 
 # ---------------- Submit game or quiz score ----------------
