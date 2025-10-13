@@ -573,6 +573,214 @@ def student_scores():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# ---------------- ADMIN LOGIN ----------------
+@app.route("/api/admin/login", methods=["POST"])
+def admin_login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"status":"error","message":"Missing username or password"}),400
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM admin_users WHERE username=%s AND password=%s", (username, password))
+        admin = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if admin:
+            return jsonify({"status":"success","admin_name":admin["username"]})
+        else:
+            return jsonify({"status":"fail","message":"Invalid credentials"}),401
+    except Error as e:
+        return jsonify({"status":"error","message":str(e)}),500
+
+# ---------------- TEACHERS CRUD ----------------
+@app.route("/api/teachers", methods=["GET","POST"])
+def teachers():
+    if request.method == "GET":
+        try:
+            conn = get_db()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT id, username, fullname FROM teachers ORDER BY fullname")
+            result = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(result)
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+    if request.method == "POST":
+        data = request.get_json()
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO teachers (username, password, fullname) VALUES (%s,%s,%s)",
+                (data["username"], data["password"], data["fullname"])
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+@app.route("/api/teachers/<int:teacher_id>", methods=["PUT","DELETE"])
+def teacher_detail(teacher_id):
+    if request.method == "PUT":
+        data = request.get_json()
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE teachers SET username=%s, password=%s, fullname=%s WHERE id=%s",
+                (data["username"], data["password"], data["fullname"], teacher_id)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+    if request.method == "DELETE":
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM teachers WHERE id=%s", (teacher_id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+# ---------------- STUDENTS CRUD ----------------
+@app.route("/api/students", methods=["GET","POST"])
+def students():
+    if request.method == "GET":
+        try:
+            conn = get_db()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT id, name, student_number, section_id FROM students ORDER BY name")
+            result = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(result)
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+    if request.method == "POST":
+        data = request.get_json()
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO students (name, student_number, section_id, password) VALUES (%s,%s,%s,%s)",
+                (data["name"], data["student_number"], data["section_id"], data["password"])
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+@app.route("/api/students/<int:student_id>", methods=["PUT","DELETE"])
+def student_detail(student_id):
+    if request.method == "PUT":
+        data = request.get_json()
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE students SET name=%s, student_number=%s, section_id=%s, password=%s WHERE id=%s",
+                (data["name"], data["student_number"], data["section_id"], data["password"], student_id)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+    if request.method == "DELETE":
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM students WHERE id=%s", (student_id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+# ---------------- FEEDBACK CRUD ----------------
+@app.route("/api/feedback", methods=["GET","POST"])
+def feedback():
+    if request.method == "GET":
+        try:
+            conn = get_db()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""SELECT f.id, f.feedback_text, f.student_id, s.name AS student_name 
+                              FROM feedback f JOIN students s ON f.student_id=s.id ORDER BY f.id""")
+            result = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify(result)
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+    if request.method == "POST":
+        data = request.get_json()
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO feedback (student_id, feedback_text) VALUES (%s,%s)",
+                (data["student_id"], data["feedback_text"])
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+@app.route("/api/feedback/<int:feedback_id>", methods=["PUT","DELETE"])
+def feedback_detail(feedback_id):
+    if request.method == "PUT":
+        data = request.get_json()
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE feedback SET student_id=%s, feedback_text=%s WHERE id=%s",
+                (data["student_id"], data["feedback_text"], feedback_id)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
+    if request.method == "DELETE":
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM feedback WHERE id=%s", (feedback_id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status":"success"})
+        except Error as e:
+            return jsonify({"status":"error","message":str(e)}),500
+
 # ---------------- TEST DB CONNECTION ----------------
 @app.route("/test-db")
 def test_db():
