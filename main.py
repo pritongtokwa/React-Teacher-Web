@@ -3,28 +3,30 @@ from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
 import re
-
 import pandas as pd
 from werkzeug.utils import secure_filename
 import os
 
+# ---------------- FLASK APP ----------------
 app = Flask(__name__)
 CORS(app)
 app.secret_key = "supersecretkey"
-
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# ---------------- DATABASE CONNECTION ----------------
 def get_db():
     return mysql.connector.connect(
-        host="localhost",
+        host="switchback.proxy.rlwy.net",
+        port=14091,
         user="root",
-        password="",
-        database="login_system"
+        password="fROvVkrMziyiAauJkszNrldrBndCjvvI",
+        database="railway"
     )
 
+# ---------------- UTILITIES ----------------
 def natural_key(text):
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', text)]
 
@@ -32,6 +34,7 @@ submitted_data = []
 created_classes = {}
 registered_students = {}
 
+# ---------------- HOME ----------------
 @app.route("/")
 def home():
     return redirect(url_for('login'))
@@ -114,7 +117,7 @@ def class_view(section_id):
             if section:
                 classname = section.get("name")
 
-            # Use try-except to prevent crash if table/student_scores missing
+            # Fetch students and scores
             try:
                 cursor.execute("""
                     SELECT st.name AS student_name, s.name AS section_name,
@@ -124,13 +127,13 @@ def class_view(section_id):
                     JOIN sections s ON st.section_id = s.id
                     WHERE st.section_id = %s
                     ORDER BY st.name
-
                 """, (section_id,))
                 data = cursor.fetchall() or []
             except Exception as e:
                 print("Error fetching student data:", e)
                 data = []
 
+            # Fetch all sections
             try:
                 cursor.execute("SELECT id, name FROM sections ORDER BY name")
                 classes = cursor.fetchall() or []
@@ -164,13 +167,11 @@ def submit_score():
 
         conn = get_db()
         with conn.cursor(dictionary=True) as cursor:
-            # Get student id and section
             cursor.execute("SELECT id, section_id FROM students WHERE student_number=%s", (student_number,))
             student = cursor.fetchone()
             if not student:
                 return jsonify({"status": "fail", "message": "Student not found"}), 404
 
-            # Check if a row exists
             cursor.execute(
                 "SELECT * FROM student_scores WHERE student_id=%s AND section_id=%s",
                 (student["id"], student["section_id"])
@@ -178,14 +179,12 @@ def submit_score():
             existing = cursor.fetchone()
 
             if existing:
-                # Update existing
                 cursor.execute("""
                     UPDATE student_scores
                     SET minigame1=%s, minigame2=%s, minigame3=%s, minigame4=%s, quiz=%s
                     WHERE student_id=%s AND section_id=%s
                 """, (minigame1, minigame2, minigame3, minigame4, quiz, student["id"], student["section_id"]))
             else:
-                # Insert new
                 cursor.execute("""
                     INSERT INTO student_scores (student_id, section_id, minigame1, minigame2, minigame3, minigame4, quiz)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -254,11 +253,7 @@ def create_student():
     conn.close()
     return render_template("createstudent.html", error=error, sections=sections, current_page="create-student")
 
-# ---------------- EXCEL UPLOAD ----------------
-import os
-from werkzeug.utils import secure_filename
-import pandas as pd
-
+# ---------------- UPLOAD STUDENTS ----------------
 @app.route("/upload-students", methods=["POST"])
 def upload_students():
     if "teacher_id" not in session:
@@ -327,7 +322,7 @@ def upload_students():
 
     return redirect(url_for("create_student"))
 
-# ---------------- QUIZ ----------------
+# ---------------- QUIZ ROUTES ----------------
 @app.route("/create-quiz", methods=["GET", "POST"])
 def create_quiz():
     if request.method == "POST":
@@ -384,8 +379,7 @@ def edit_quiz():
 
     return render_template("edit_quiz.html", quizzes=quizzes, current_page="edit-quiz")
 
-import pandas as pd
-
+# ---------------- UPLOAD QUIZ ----------------
 @app.route("/upload-quiz", methods=["POST"])
 def upload_quiz():
     if "quiz_file" not in request.files:
@@ -399,20 +393,12 @@ def upload_quiz():
 
     filename = secure_filename(file.filename)
     file_ext = os.path.splitext(filename)[1].lower()
-
-    if file_ext not in [".xls", ".xlsx", ".csv"]:
-        flash("Unsupported file type. Please upload .xls, .xlsx, or .csv", "error")
-        return redirect(url_for("create_quiz"))
-
     upload_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(upload_path)
 
     try:
         if file_ext in [".xls", ".xlsx"]:
-            if file_ext == ".xls":
-                df = pd.read_excel(upload_path, engine="xlrd")
-            else:
-                df = pd.read_excel(upload_path, engine="openpyxl")
+            df = pd.read_excel(upload_path)
         else:
             df = pd.read_csv(upload_path)
 
@@ -524,8 +510,7 @@ def submit():
         print("Error in /submit route:", e)
         return jsonify({"error": "Server error"}), 500
 
-# ---------------- FLASK ROUTE - RENPY LOGIN ----------------
-from flask import request, jsonify
+# ---------------- FLASK API LOGIN FOR RENPY ----------------
 @app.route("/api/login", methods=["POST"])
 def api_login():
     try:
@@ -553,37 +538,7 @@ def api_login():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-if __name__ == '__main__':
-    import os
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
-
-"""
-# ---------------- FLASK ROUTE - RENPY LOGIN (TESTING PURPOSES) ----------------
-@app.route("/api/login", methods=["POST"])
-def api_login():
-    try:
-        data = request.get_json()
-        student_number = (data.get("student_number") or "").strip()
-        password = (data.get("password") or "").strip()
-
-        if not student_number or not password:
-            return jsonify({
-                "status": "fail",
-                "message": "Please enter a student number and password."
-            }), 400
-
-        return jsonify({
-            "status": "success",
-            "student_name": student_number,
-            "section_id": 1
-        })
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-"""
-
-# ---------------- DROPDOWN RELOAD ----------------
+# ---------------- DROPDOWN SECTIONS API ----------------
 @app.route("/api/sections")
 def api_sections():
     conn = get_db()
@@ -593,50 +548,7 @@ def api_sections():
     conn.close()
     return jsonify(sections)
 
-# ---------------- DB Connection ----------------
-
-import mysql.connector
-
-def get_db():
-    return mysql.connector.connect(
-        host="switchback.proxy.rlwy.net",
-        port=14091,
-        user="root",
-        password="fROvVkrMziyiAauJkszNrldrBndCjvvI",
-        database="railway"
-    )
-
-@app.route("/test-db")
-def test_db():
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM students LIMIT 5")
-        results = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return {"students": results}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------- PHP Connection ----------------
-
-from flask import Flask, request, jsonify
-import mysql.connector
-
-app = Flask(__name__)
-
-# --- Database connection helper ---
-def get_db():
-    return mysql.connector.connect(
-        host="switchback.proxy.rlwy.net",
-        port=14091,
-        user="root",
-        password="fROvVkrMziyiAauJkszNrldrBndCjvvI",
-        database="railway"
-    )
-
-# --- API route for PHP ---
+# ---------------- PHP API FOR STUDENT SCORES ----------------
 @app.route("/api/student_scores", methods=["POST"])
 def student_scores():
     try:
@@ -660,3 +572,22 @@ def student_scores():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ---------------- TEST DB CONNECTION ----------------
+@app.route("/test-db")
+def test_db():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM students LIMIT 5")
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return {"students": results}
+    except Exception as e:
+        return {"error": str(e)}
+
+# ---------------- RUN SERVER ----------------
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
