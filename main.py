@@ -879,6 +879,10 @@ def test_db():
     except Exception as e:
         return {"error": str(e)}
 
+@app.route('/api/ping', methods=['POST', 'GET'])
+def ping():
+    return jsonify({"success": True, "message": "Flask API reachable!"})
+
 # ---------------- RUN SERVER ----------------
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
