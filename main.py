@@ -464,6 +464,7 @@ def upload_students():
 
     return redirect(url_for("create_student"))
 
+'''
 # ----------------- FOR ADMIN ----------------
 @app.route("/api/upload-students", methods=["POST"])
 def api_upload_students():
@@ -527,6 +528,63 @@ def api_upload_students():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+'''
+
+# ---------------- EXTERNAL UPLOAD (for PHP site) ----------------
+@app.route("/api/upload-students", methods=["POST"])
+def api_upload_students():
+    file = request.files.get("excel_file")
+    if not file:
+        return jsonify({"status": "error", "message": "No file uploaded"}), 400
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config.get("UPLOAD_FOLDER", "."), filename)
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    file.save(filepath)
+
+    try:
+        df = pd.read_excel(filepath)
+        headers = [h.lower() for h in df.columns]
+        required = ["student_number", "name", "section", "password"]
+        for key in required:
+            if key not in headers:
+                return jsonify({"status": "error", "message": f"Missing required column: {key}"}), 400
+
+        conn = get_db()
+        with conn.cursor() as cursor:
+            added = 0
+            skipped = 0
+            for _, row in df.iterrows():
+                student_number = str(row["student_number"]).strip()
+                name = str(row["name"]).strip()
+                section_name = str(row["section"]).strip()
+                password = str(row["password"]).strip()
+
+                cursor.execute("SELECT id FROM sections WHERE name=%s", (section_name,))
+                result = cursor.fetchone()
+                if result:
+                    section_id = result[0]
+                else:
+                    cursor.execute("INSERT INTO sections (name) VALUES (%s)", (section_name,))
+                    conn.commit()
+                    section_id = cursor.lastrowid
+
+                cursor.execute("SELECT id FROM students WHERE student_number=%s", (student_number,))
+                if cursor.fetchone():
+                    skipped += 1
+                    continue
+
+                cursor.execute(
+                    "INSERT INTO students (name, student_number, section_id, password) VALUES (%s, %s, %s, %s)",
+                    (name, student_number, section_id, password)
+                )
+                added += 1
+
+            conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "message": f"{added} students added, {skipped} skipped."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error: {e}"}), 500
 
 # ---------------- QUIZ ROUTES ----------------
 @app.route("/create-quiz", methods=["GET", "POST"])
