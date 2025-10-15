@@ -293,7 +293,6 @@ def sections_detail(section_id):
         except Error as e:
             return jsonify({"status":"error","message":str(e)}),500
 
-
 # ---------------- Submit game or quiz score ----------------
 @app.route("/submit-score", methods=["POST"])
 def submit_score():
@@ -325,14 +324,45 @@ def submit_score():
             if existing:
                 cursor.execute("""
                     UPDATE student_scores
-                    SET minigame1=%s, minigame2=%s, minigame3=%s, minigame4=%s, quiz=%s
+                    SET
+                        minigame1_best = GREATEST(minigame1_best, %s),
+                        minigame2_best = GREATEST(minigame2_best, %s),
+                        minigame3_best = GREATEST(minigame3_best, %s),
+                        minigame4_best = GREATEST(minigame4_best, %s),
+                        minigame1_attempts = minigame1_attempts + 1,
+                        minigame2_attempts = minigame2_attempts + 1,
+                        minigame3_attempts = minigame3_attempts + 1,
+                        minigame4_attempts = minigame4_attempts + 1,
+                        minigame1_first = COALESCE(minigame1_first, %s),
+                        minigame2_first = COALESCE(minigame2_first, %s),
+                        minigame3_first = COALESCE(minigame3_first, %s),
+                        minigame4_first = COALESCE(minigame4_first, %s),
+                        quiz = %s
                     WHERE student_id=%s AND section_id=%s
-                """, (minigame1, minigame2, minigame3, minigame4, quiz, student["id"], student["section_id"]))
+                """, (
+                    minigame1, minigame2, minigame3, minigame4,
+                    minigame1, minigame2, minigame3, minigame4,
+                    quiz,
+                    student["id"], student["section_id"]
+                ))
             else:
                 cursor.execute("""
-                    INSERT INTO student_scores (student_id, section_id, minigame1, minigame2, minigame3, minigame4, quiz)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, (student["id"], student["section_id"], minigame1, minigame2, minigame3, minigame4, quiz))
+                    INSERT INTO student_scores (
+                        student_id, section_id,
+                        minigame1_first, minigame1_best, minigame1_attempts,
+                        minigame2_first, minigame2_best, minigame2_attempts,
+                        minigame3_first, minigame3_best, minigame3_attempts,
+                        minigame4_first, minigame4_best, minigame4_attempts,
+                        quiz
+                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    student["id"], student["section_id"],
+                    minigame1, minigame1, 1,
+                    minigame2, minigame2, 1,
+                    minigame3, minigame3, 1,
+                    minigame4, minigame4, 1,
+                    quiz
+                ))
 
             conn.commit()
         conn.close()

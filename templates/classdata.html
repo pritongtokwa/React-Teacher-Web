@@ -17,10 +17,10 @@
                 <tr>
                     <th>Student Name</th>
                     <th>Section</th>
-                    <th>Minigame 1</th>
-                    <th>Minigame 2</th>
-                    <th>Minigame 3</th>
-                    <th>Minigame 4</th>
+                    <th>Minigame 1 (Best)</th>
+                    <th>Minigame 2 (Best)</th>
+                    <th>Minigame 3 (Best)</th>
+                    <th>Minigame 4 (Best)</th>
                     <th>Quiz Score</th>
                 </tr>
             </thead>
@@ -29,10 +29,10 @@
                 <tr>
                     <td>{{ entry.student_name }}</td>
                     <td>{{ entry.section_name }}</td>
-                    <td>{{ entry.minigame1 or 0 }}</td>
-                    <td>{{ entry.minigame2 or 0 }}</td>
-                    <td>{{ entry.minigame3 or 0 }}</td>
-                    <td>{{ entry.minigame4 or 0 }}</td>
+                    <td>{{ entry.minigame1_best or 0 }}</td>
+                    <td>{{ entry.minigame2_best or 0 }}</td>
+                    <td>{{ entry.minigame3_best or 0 }}</td>
+                    <td>{{ entry.minigame4_best or 0 }}</td>
                     <td>{{ entry.quiz or 0 }}</td>
                 </tr>
                 {% endfor %}
