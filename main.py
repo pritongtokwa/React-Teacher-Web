@@ -891,12 +891,27 @@ def feedback():
 
     if request.method == "POST":
         data = request.get_json()
+        student_number = data.get("student_number")  # changed from student_id
+        feedback_text = data.get("feedback_text", "").strip()
+
+        if not student_number:
+            return jsonify({"status":"error","message":"No student number provided"}), 400
+
         try:
             conn = get_db()
-            cursor = conn.cursor()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT id FROM students WHERE student_number=%s", (student_number,))
+            student = cursor.fetchone()
+            if not student:
+                cursor.close()
+                conn.close()
+                return jsonify({"status":"error","message":f"Student number {student_number} not found"}), 404
+
+            student_id = student["id"]
+
             cursor.execute(
                 "INSERT INTO feedback (student_id, feedback_text) VALUES (%s,%s)",
-                (data["student_id"], data["feedback_text"])
+                (student_id, feedback_text)
             )
             conn.commit()
             cursor.close()
