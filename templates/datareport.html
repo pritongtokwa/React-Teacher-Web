@@ -3,6 +3,8 @@
 {% block content %}
 <div class="main">
     <div class="data-table">
+        <h2>{{ classname or "View Student Scores" }} - Data Report</h2>
+        
         <div class="class-buttons">
             {% for sec in classes %}
             <form action="{{ url_for('datareport_view', section_id=sec.id) }}" method="get" style="display: inline;">
@@ -10,13 +12,14 @@
             </form>
             {% endfor %}
         </div>
-        <h2>{{ classname }} - Data Report</h2>
+
         {% if data %}
         <table>
             <thead>
                 <tr>
                     <th>Student Name</th>
                     <th>Section</th>
+
                     <th>Minigame 1 (First)</th>
                     <th>Minigame 1 (Best)</th>
                     <th>Minigame 1 (Attempts)</th>
@@ -70,6 +73,9 @@
         {% else %}
         <p>No students found in this class.</p>
         {% endif %}
+
     </div>
+
+    <div class="bottom-text">ECO HEROES</div>
 </div>
 {% endblock %}
