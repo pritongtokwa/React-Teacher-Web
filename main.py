@@ -81,9 +81,50 @@ def dashboard():
     )
 
 # ---------------- DATA REPORT ----------------
-@app.route("/data-report")
+@app.route("/data-report", methods=["GET"])
 def data_report():
-    return render_template("datareport.html", current_page="data-report")
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT id, name FROM sections ORDER BY name")
+        classes = cursor.fetchall()
+
+        section_id = request.args.get("section_id")
+        classname = None
+        data = []
+
+        if section_id:
+            cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
+            section = cursor.fetchone()
+            classname = section["name"] if section else None
+
+            cursor.execute("""
+                SELECT s.name AS student_name, sec.name AS section_name,
+                       sc.minigame1_first, sc.minigame1_best, sc.minigame1_attempts,
+                       sc.minigame2_first, sc.minigame2_best, sc.minigame2_attempts,
+                       sc.minigame3_first, sc.minigame3_best, sc.minigame3_attempts,
+                       sc.minigame4_first, sc.minigame4_best, sc.minigame4_attempts,
+                       sc.quiz
+                FROM scores sc
+                JOIN students s ON sc.student_id = s.id
+                JOIN sections sec ON s.section_id = sec.id
+                WHERE s.section_id = %s
+                ORDER BY s.name
+            """, (section_id,))
+            data = cursor.fetchall()
+
+        conn.close()
+
+        return render_template(
+            "datareport.html",
+            current_page="data-report",
+            classes=classes,
+            classname=classname,
+            data=data
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # ---------------- VIEW SCORES ----------------
 @app.route("/manage-data")
