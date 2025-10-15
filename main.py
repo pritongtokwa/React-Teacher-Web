@@ -230,6 +230,7 @@ def student_detail(student_id):
         except Error as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
+
 # ---------------- SECTIONS CRUD ----------------
 @app.route("/api/sections", methods=["GET","POST"])
 def sections():
@@ -294,22 +295,6 @@ def sections_detail(section_id):
         except Error as e:
             return jsonify({"status":"error","message":str(e)}),500
 
-'''
-@app.route("/api/sections/<int:section_id>", methods=["DELETE"])
-def section_detail(section_id):
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        # Delete students first (optional: cascade in DB)
-        cursor.execute("DELETE FROM students WHERE section_id=%s", (section_id,))
-        cursor.execute("DELETE FROM sections WHERE id=%s", (section_id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"status":"success"})
-    except Error as e:
-        return jsonify({"status":"error","message":str(e)}),500
-'''
 
 # ---------------- Submit game or quiz score ----------------
 @app.route("/submit-score", methods=["POST"])
@@ -872,12 +857,20 @@ def admin_login():
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM admin_users WHERE username=%s AND password=%s", (username, password))
+        cursor.execute(
+            "SELECT username, role FROM admin_users WHERE username=%s AND password=%s",
+            (username, password)
+        )
         admin = cursor.fetchone()
         cursor.close()
         conn.close()
+
         if admin:
-            return jsonify({"status":"success","admin_name":admin["username"]})
+            return jsonify({
+                "status": "success",
+                "admin_name": admin["username"],
+                "role": admin.get("role", "admin")
+            })
         else:
             return jsonify({"status":"fail","message":"Invalid credentials"}),401
     except Error as e:
