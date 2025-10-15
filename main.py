@@ -848,11 +848,12 @@ def student_scores():
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True)
         username = data.get("username")
         password = data.get("password")
+
         if not username or not password:
-            return jsonify({"status":"error","message":"Missing username or password"}),400
+            return jsonify({"status":"error","message":"Missing username or password"}), 400
 
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -864,8 +865,6 @@ def admin_login():
         cursor.close()
         conn.close()
 
-        print("Admin fetched:", admin)
-
         if admin:
             return jsonify({
                 "status": "success",
@@ -873,10 +872,13 @@ def admin_login():
                 "role": admin.get("role", "admin")
             })
         else:
-            return jsonify({"status":"fail","message":"Invalid credentials"}),401
+            return jsonify({"status":"fail","message":"Invalid credentials"}), 401
+
+    except mysql.connector.Error as db_err:
+        return jsonify({"status":"error","message":f"Database error: {str(db_err)}"}), 500
+
     except Exception as e:
-        print("Exception in admin_login:", e)
-        return jsonify({"status":"error","message":str(e)}),500
+        return jsonify({"status":"error","message":f"Unexpected error: {str(e)}"}), 500
 
 # ---------------- TEACHERS CRUD ----------------
 @app.route("/api/teachers", methods=["GET","POST"])
