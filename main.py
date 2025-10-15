@@ -185,19 +185,38 @@ def students():
 def student_detail(student_id):
     if request.method == "PUT":
         data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No JSON body provided"}), 400
+
+        for field in ["name", "student_number", "section_id"]:
+            if field not in data:
+                return jsonify({"status": "error", "message": f"Missing field: {field}"}), 400
+
         try:
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE students SET name=%s, student_number=%s, section_id=%s, password=%s WHERE id=%s",
-                (data["name"], data["student_number"], data["section_id"], data["password"], student_id)
-            )
+
+            query = "UPDATE students SET name=%s, student_number=%s, section_id=%s"
+            params = [data["name"], data["student_number"], data["section_id"]]
+
+            password = data.get("password")
+            if password and password.strip():
+                query += ", password=%s"
+                params.append(password.strip())
+
+            query += " WHERE id=%s"
+            params.append(student_id)
+
+            cursor.execute(query, params)
             conn.commit()
             cursor.close()
             conn.close()
-            return jsonify({"status":"success"})
+            return jsonify({"status": "success"})
+
         except Error as e:
-            return jsonify({"status":"error","message":str(e)}),500
+            return jsonify({"status": "error", "message": f"Database error: {e}"}), 500
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Unexpected error: {e}"}), 500
 
     if request.method == "DELETE":
         try:
@@ -207,9 +226,9 @@ def student_detail(student_id):
             conn.commit()
             cursor.close()
             conn.close()
-            return jsonify({"status":"success"})
+            return jsonify({"status": "success"})
         except Error as e:
-            return jsonify({"status":"error","message":str(e)}),500
+            return jsonify({"status": "error", "message": str(e)}), 500
 
 # ---------------- SECTIONS CRUD ----------------
 @app.route("/api/sections", methods=["GET","POST"])
