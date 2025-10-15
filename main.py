@@ -880,8 +880,12 @@ def feedback():
         try:
             conn = get_db()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("""SELECT f.id, f.feedback_text, f.student_id, s.name AS student_name 
-                              FROM feedback f JOIN students s ON f.student_id=s.id ORDER BY f.id""")
+            cursor.execute("""
+                SELECT f.id, f.feedback_text, f.student_id, s.name AS student_name, f.created_at
+                FROM feedback f
+                JOIN students s ON f.student_id = s.id
+                ORDER BY f.id
+            """)
             result = cursor.fetchall()
             cursor.close()
             conn.close()
