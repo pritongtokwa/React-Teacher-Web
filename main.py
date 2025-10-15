@@ -847,14 +847,13 @@ def student_scores():
 # ---------------- ADMIN LOGIN ----------------
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
-    data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
-
-    if not username or not password:
-        return jsonify({"status":"error","message":"Missing username or password"}),400
-
     try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        if not username or not password:
+            return jsonify({"status":"error","message":"Missing username or password"}),400
+
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
@@ -865,6 +864,8 @@ def admin_login():
         cursor.close()
         conn.close()
 
+        print("Admin fetched:", admin)
+
         if admin:
             return jsonify({
                 "status": "success",
@@ -873,7 +874,8 @@ def admin_login():
             })
         else:
             return jsonify({"status":"fail","message":"Invalid credentials"}),401
-    except Error as e:
+    except Exception as e:
+        print("Exception in admin_login:", e)
         return jsonify({"status":"error","message":str(e)}),500
 
 # ---------------- TEACHERS CRUD ----------------
