@@ -284,9 +284,7 @@ def sections_detail(section_id):
         try:
             conn = get_db()
             cursor = conn.cursor()
-            # Delete all students in this section first
             cursor.execute("DELETE FROM students WHERE section_id=%s", (section_id,))
-            # Then delete the section
             cursor.execute("DELETE FROM sections WHERE id=%s", (section_id,))
             conn.commit()
             cursor.close()
@@ -467,72 +465,6 @@ def upload_students():
         flash(f"Error processing Excel file: {e}", "error")
 
     return redirect(url_for("create_student"))
-
-'''
-# ----------------- FOR ADMIN ----------------
-@app.route("/api/upload-students", methods=["POST"])
-def api_upload_students():
-    if "teacher_id" not in session:
-        return jsonify({"status": "error", "message": "Not logged in"}), 401
-
-    file = request.files.get("excel_file")
-    if not file:
-        return jsonify({"status": "error", "message": "No file selected"}), 400
-
-    try:
-        df = pd.read_excel(file)
-        headers = [h.lower() for h in df.columns]
-
-        col_map = {}
-        for key in ["student_number", "name", "section", "password"]:
-            for i, h in enumerate(headers):
-                if h == key.lower():
-                    col_map[key] = i
-                    break
-            else:
-                return jsonify({"status": "error", "message": f"Missing required column: {key}"}), 400
-
-        conn = get_db()
-        with conn.cursor() as cursor:
-            added_students = 0
-            skipped_students = 0
-            for _, row in df.iterrows():
-                student_number = str(row[col_map["student_number"]]).strip()
-                name = str(row[col_map["name"]]).strip()
-                section_name = str(row[col_map["section"]]).strip()
-                password = str(row[col_map["password"]]).strip()
-
-                cursor.execute("SELECT id FROM sections WHERE name=%s", (section_name,))
-                result = cursor.fetchone()
-                if result:
-                    section_id = result[0]
-                else:
-                    cursor.execute("INSERT INTO sections (name) VALUES (%s)", (section_name,))
-                    conn.commit()
-                    section_id = cursor.lastrowid
-
-                cursor.execute("SELECT id FROM students WHERE student_number=%s", (student_number,))
-                if cursor.fetchone():
-                    skipped_students += 1
-                    continue
-
-                cursor.execute(
-                    "INSERT INTO students (name, student_number, section_id, password) VALUES (%s, %s, %s, %s)",
-                    (name, student_number, section_id, password)
-                )
-                added_students += 1
-
-            conn.commit()
-        conn.close()
-
-        return jsonify({
-            "status": "success",
-            "message": f"{added_students} students added successfully. {skipped_students} duplicates skipped."
-        })
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-'''
 
 # ---------------- EXTERNAL UPLOAD (for PHP site) ----------------
 @app.route("/api/upload-students", methods=["POST"])
