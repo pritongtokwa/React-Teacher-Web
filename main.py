@@ -366,7 +366,7 @@ def submit_score():
                 return jsonify({"status": "fail", "message": "Student not found"}), 404
 
             cursor.execute(
-                "SELECT * FROM student_scores WHERE student_id=%s AND section_id=%s",
+                "SELECT * FROM scores WHERE student_id=%s AND section_id=%s",
                 (student["id"], student["section_id"])
             )
             existing = cursor.fetchone()
