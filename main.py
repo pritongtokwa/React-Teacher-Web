@@ -79,6 +79,7 @@ def dashboard():
         teacher_name=session.get("teacher_name"),
         current_page="dashboard"
     )
+
 # ---------------- DATA REPORT ----------------
 @app.route("/data-report", methods=["GET"])
 def data_report():
@@ -92,6 +93,12 @@ def data_report():
         section_id = request.args.get("section_id")
         classname = None
         data = []
+
+        if section_id:
+            try:
+                section_id = int(section_id)
+            except ValueError:
+                section_id = None
 
         if section_id:
             cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
