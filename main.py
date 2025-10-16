@@ -379,14 +379,14 @@ def submit_score():
                         minigame2_best = GREATEST(minigame2_best, %s),
                         minigame3_best = GREATEST(minigame3_best, %s),
                         minigame4_best = GREATEST(minigame4_best, %s),
-                        minigame1_attempts = minigame1_attempts + 1,
-                        minigame2_attempts = minigame2_attempts + 1,
-                        minigame3_attempts = minigame3_attempts + 1,
-                        minigame4_attempts = minigame4_attempts + 1,
-                        minigame1_first = COALESCE(minigame1_first, %s),
-                        minigame2_first = COALESCE(minigame2_first, %s),
-                        minigame3_first = COALESCE(minigame3_first, %s),
-                        minigame4_first = COALESCE(minigame4_first, %s),
+                        minigame1_attempts = minigame1_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
+                        minigame2_attempts = minigame2_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
+                        minigame3_attempts = minigame3_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
+                        minigame4_attempts = minigame4_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
+                        minigame1_first = CASE WHEN minigame1_first IS NULL AND %s > 0 THEN %s ELSE minigame1_first END,
+                        minigame2_first = CASE WHEN minigame2_first IS NULL AND %s > 0 THEN %s ELSE minigame2_first END,
+                        minigame3_first = CASE WHEN minigame3_first IS NULL AND %s > 0 THEN %s ELSE minigame3_first END,
+                        minigame4_first = CASE WHEN minigame4_first IS NULL AND %s > 0 THEN %s ELSE minigame4_first END,
                         quiz_score = %s
                     WHERE student_id=%s
                 """, (
