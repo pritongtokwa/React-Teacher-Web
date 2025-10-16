@@ -79,7 +79,6 @@ def dashboard():
         teacher_name=session.get("teacher_name"),
         current_page="dashboard"
     )
-
 # ---------------- DATA REPORT ----------------
 @app.route("/data-report", methods=["GET"])
 def data_report():
@@ -100,17 +99,17 @@ def data_report():
             classname = section["name"] if section else None
 
             cursor.execute("""
-                SELECT s.name AS student_name, sec.name AS section_name,
+                SELECT st.name AS student_name, sec.name AS section_name,
                     sc.minigame1_first, sc.minigame1_best, sc.minigame1_attempts,
                     sc.minigame2_first, sc.minigame2_best, sc.minigame2_attempts,
                     sc.minigame3_first, sc.minigame3_best, sc.minigame3_attempts,
                     sc.minigame4_first, sc.minigame4_best, sc.minigame4_attempts,
                     sc.quiz_score
-                FROM scores sc
-                JOIN students s ON sc.student_id = s.id
-                JOIN sections sec ON s.section_id = sec.id
-                WHERE s.section_id = %s
-                ORDER BY s.name
+                FROM students st
+                LEFT JOIN scores sc ON st.id = sc.student_id
+                JOIN sections sec ON st.section_id = sec.id
+                WHERE st.section_id = %s
+                ORDER BY st.name
             """, (section_id,))
             data = cursor.fetchall()
 
