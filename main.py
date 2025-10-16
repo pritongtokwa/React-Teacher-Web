@@ -939,22 +939,19 @@ def teacher_detail(teacher_id):
         try:
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE teachers SET username=%s, password=%s, fullname=%s WHERE id=%s",
-                (data["username"], data["password"], data["fullname"], teacher_id)
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return jsonify({"status":"success"})
-        except Error as e:
-            return jsonify({"status":"error","message":str(e)}),500
 
-    if request.method == "DELETE":
-        try:
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM teachers WHERE id=%s", (teacher_id,))
+            # If password is provided, update it; else, keep current
+            if "password" in data and data["password"]:
+                cursor.execute(
+                    "UPDATE teachers SET username=%s, password=%s, fullname=%s WHERE id=%s",
+                    (data["username"], data["password"], data["fullname"], teacher_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE teachers SET username=%s, fullname=%s WHERE id=%s",
+                    (data["username"], data["fullname"], teacher_id)
+                )
+
             conn.commit()
             cursor.close()
             conn.close()
