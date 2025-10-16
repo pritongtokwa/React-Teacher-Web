@@ -65,7 +65,7 @@
                     <td>{{ entry.minigame4_attempts or 0 }}</td>
                     <td>{{ (entry.minigame4_best - entry.minigame4_first) if entry.minigame4_first is not none else 0 }}</td>
 
-                    <td>{{ entry.quiz or 0 }}</td>
+                    <td>{{ entry.quiz_score or 0 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
