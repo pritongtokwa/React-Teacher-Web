@@ -153,18 +153,21 @@ def class_view(section_id):
     try:
         conn = get_db()
         with conn.cursor(dictionary=True) as cursor:
+            # Get section name
             cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
             section = cursor.fetchone()
             if section:
                 classname = section.get("name")
 
-            # Fetch students and scores
+            # Fetch students and their scores (from scores table)
             try:
                 cursor.execute("""
                     SELECT st.name AS student_name, s.name AS section_name,
-                    sc.minigame1, sc.minigame2, sc.minigame3, sc.minigame4, sc.quiz
+                           sc.minigame1_best, sc.minigame2_best,
+                           sc.minigame3_best, sc.minigame4_best,
+                           sc.quiz
                     FROM students st
-                    LEFT JOIN student_scores sc ON st.id = sc.student_id
+                    LEFT JOIN scores sc ON st.id = sc.student_id
                     JOIN sections s ON st.section_id = s.id
                     WHERE st.section_id = %s
                     ORDER BY st.name
@@ -174,7 +177,7 @@ def class_view(section_id):
                 print("Error fetching student data:", e)
                 data = []
 
-            # Fetch all sections
+            # Fetch all sections (for buttons)
             try:
                 cursor.execute("SELECT id, name FROM sections ORDER BY name")
                 classes = cursor.fetchall() or []
@@ -189,7 +192,13 @@ def class_view(section_id):
         if conn.is_connected():
             conn.close()
 
-    return render_template("classdata.html", data=data, classname=classname, classes=classes, current_page="manage-data")
+    return render_template(
+        "classdata.html",
+        data=data,
+        classname=classname,
+        classes=classes,
+        current_page="manage-data"
+    )
 
 # ---------------- STUDENTS CRUD ----------------
 @app.route("/api/students", methods=["GET","POST"])
@@ -364,7 +373,7 @@ def submit_score():
 
             if existing:
                 cursor.execute("""
-                    UPDATE student_scores
+                    UPDATE scores
                     SET
                         minigame1_best = GREATEST(minigame1_best, %s),
                         minigame2_best = GREATEST(minigame2_best, %s),
@@ -378,23 +387,23 @@ def submit_score():
                         minigame2_first = COALESCE(minigame2_first, %s),
                         minigame3_first = COALESCE(minigame3_first, %s),
                         minigame4_first = COALESCE(minigame4_first, %s),
-                        quiz = %s
-                    WHERE student_id=%s AND section_id=%s
+                        quiz_score = %s
+                    WHERE student_id=%s
                 """, (
                     minigame1, minigame2, minigame3, minigame4,
                     minigame1, minigame2, minigame3, minigame4,
                     quiz,
-                    student["id"], student["section_id"]
+                    student["id"]
                 ))
             else:
                 cursor.execute("""
-                    INSERT INTO student_scores (
+                    INSERT INTO scores (
                         student_id, section_id,
                         minigame1_first, minigame1_best, minigame1_attempts,
                         minigame2_first, minigame2_best, minigame2_attempts,
                         minigame3_first, minigame3_best, minigame3_attempts,
                         minigame4_first, minigame4_best, minigame4_attempts,
-                        quiz
+                        quiz_score
                     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """, (
                     student["id"], student["section_id"],
@@ -404,7 +413,6 @@ def submit_score():
                     minigame4, minigame4, 1,
                     quiz
                 ))
-
             conn.commit()
         conn.close()
         return jsonify({"status": "success", "message": "Scores updated."})
