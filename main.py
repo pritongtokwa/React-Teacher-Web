@@ -372,40 +372,29 @@ def submit_score():
             existing = cursor.fetchone()
 
             if existing:
-                cursor.execute("""
-                    UPDATE scores
-                    SET
-                        minigame1_best = GREATEST(minigame1_best, %s),
-                        minigame2_best = GREATEST(minigame2_best, %s),
-                        minigame3_best = GREATEST(minigame3_best, %s),
-                        minigame4_best = GREATEST(minigame4_best, %s),
+                updates = []
+                values = []
 
-                        minigame1_attempts = minigame1_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
-                        minigame2_attempts = minigame2_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
-                        minigame3_attempts = minigame3_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
-                        minigame4_attempts = minigame4_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END,
+                for i, score in enumerate([minigame1, minigame2, minigame3, minigame4], start=1):
+                    updates.append(f"minigame{i}_best = GREATEST(minigame{i}_best, %s)")
+                    values.append(score)
 
-                        minigame1_first = CASE WHEN minigame1_first IS NULL AND %s > 0 THEN %s ELSE minigame1_first END,
-                        minigame2_first = CASE WHEN minigame2_first IS NULL AND %s > 0 THEN %s ELSE minigame2_first END,
-                        minigame3_first = CASE WHEN minigame3_first IS NULL AND %s > 0 THEN %s ELSE minigame3_first END,
-                        minigame4_first = CASE WHEN minigame4_first IS NULL AND %s > 0 THEN %s ELSE minigame4_first END,
+                    updates.append(f"minigame{i}_attempts = minigame{i}_attempts + CASE WHEN %s > 0 THEN 1 ELSE 0 END")
+                    values.append(score)
 
-                        quiz_score = %s
-                    WHERE student_id=%s
-                """, (
-                    # bests
-                    minigame1, minigame2, minigame3, minigame4,
-                    # attempts
-                    minigame1, minigame2, minigame3, minigame4,
-                    # firsts (each has 2 placeholders)
-                    minigame1, minigame1,
-                    minigame2, minigame2,
-                    minigame3, minigame3,
-                    minigame4, minigame4,
-                    # quiz + id
-                    quiz,
-                    student["id"]
-                ))
+                    updates.append(
+                        f"minigame{i}_first = CASE WHEN minigame{i}_first IS NULL AND %s > 0 THEN %s ELSE minigame{i}_first END"
+                    )
+                    values.extend([score, score])
+
+                updates.append("quiz_score = CASE WHEN %s > 0 THEN %s ELSE quiz_score END")
+                values.extend([quiz, quiz])
+
+                query = f"UPDATE scores SET {', '.join(updates)} WHERE student_id=%s"
+                values.append(student["id"])
+
+                cursor.execute(query, tuple(values))
+
             else:
                 cursor.execute("""
                     INSERT INTO scores (
@@ -415,18 +404,18 @@ def submit_score():
                         minigame3_first, minigame3_best, minigame3_attempts,
                         minigame4_first, minigame4_best, minigame4_attempts,
                         quiz_score
-                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """, (
                     student["id"], student["section_id"],
-                    minigame1, minigame1, 1,
-                    minigame2, minigame2, 1,
-                    minigame3, minigame3, 1,
-                    minigame4, minigame4, 1,
+                    minigame1, minigame1, 1 if minigame1 > 0 else 0,
+                    minigame2, minigame2, 1 if minigame2 > 0 else 0,
+                    minigame3, minigame3, 1 if minigame3 > 0 else 0,
+                    minigame4, minigame4, 1 if minigame4 > 0 else 0,
                     quiz
                 ))
 
             conn.commit()
-
         conn.close()
         return jsonify({"status": "success", "message": "Scores updated."})
 
