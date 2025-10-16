@@ -83,54 +83,62 @@ def dashboard():
 # ---------------- DATA REPORT ----------------
 @app.route("/data-report", methods=["GET"])
 def data_report():
+    if "teacher_id" not in session:
+        return redirect(url_for("login"))
+
+    data = []
+    classes = []
+    classname = None
+
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        with conn.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT id, name FROM sections ORDER BY name")
+            classes = cursor.fetchall() or []
 
-        cursor.execute("SELECT id, name FROM sections ORDER BY name")
-        classes = cursor.fetchall()
+            section_id = request.args.get("section_id")
+            if section_id:
+                try:
+                    section_id = int(section_id)
+                except ValueError:
+                    section_id = None
 
-        section_id = request.args.get("section_id")
-        classname = None
+            if section_id:
+                cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
+                section = cursor.fetchone()
+                if section:
+                    classname = section.get("name")
+
+                cursor.execute("""
+                    SELECT st.name AS student_name, s.name AS section_name,
+                        sc.minigame1_first, sc.minigame1_best, sc.minigame1_attempts,
+                        sc.minigame2_first, sc.minigame2_best, sc.minigame2_attempts,
+                        sc.minigame3_first, sc.minigame3_best, sc.minigame3_attempts,
+                        sc.minigame4_first, sc.minigame4_best, sc.minigame4_attempts,
+                        sc.quiz_score
+                    FROM students st
+                    LEFT JOIN scores sc ON st.id = sc.student_id
+                    JOIN sections s ON st.section_id = s.id
+                    WHERE st.section_id = %s
+                    ORDER BY st.name
+                """, (section_id,))
+                data = cursor.fetchall() or []
+
+    except Exception as e:
+        print("Database connection error:", e)
         data = []
 
-        if section_id:
-            try:
-                section_id = int(section_id)
-            except ValueError:
-                section_id = None
+    finally:
+        if conn.is_connected():
+            conn.close()
 
-        if section_id:
-            cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
-            section = cursor.fetchone()
-            classname = section["name"] if section else None
-
-            cursor.execute("""
-                SELECT st.name AS student_name, sec.name AS section_name,
-                    sc.minigame1_first, sc.minigame1_best, sc.minigame1_attempts,
-                    sc.minigame2_first, sc.minigame2_best, sc.minigame2_attempts,
-                    sc.minigame3_first, sc.minigame3_best, sc.minigame3_attempts,
-                    sc.minigame4_first, sc.minigame4_best, sc.minigame4_attempts,
-                    sc.quiz_score
-                FROM students st
-                LEFT JOIN scores sc ON st.id = sc.student_id
-                JOIN sections sec ON st.section_id = sec.id
-                WHERE st.section_id = %s
-                ORDER BY st.name
-            """, (section_id,))
-            data = cursor.fetchall()
-
-        conn.close()
-
-        return render_template(
-            "datareport.html",
-            current_page="data-report",
-            classes=classes,
-            classname=classname,
-            data=data
-        )
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    return render_template(
+        "datareport.html",
+        data=data,
+        classname=classname,
+        classes=classes,
+        current_page="data-report"
+    )
 
 # ---------------- VIEW SCORES ----------------
 @app.route("/manage-data")
