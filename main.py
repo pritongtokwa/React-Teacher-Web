@@ -902,8 +902,6 @@ def admin_login():
         return jsonify({"status":"error","message":f"Unexpected error: {str(e)}"}), 500
 
 # ---------------- TEACHERS CRUD ----------------
-from werkzeug.security import generate_password_hash
-
 @app.route("/api/teachers", methods=["GET","POST"])
 def teachers():
     if request.method == "GET":
@@ -921,12 +919,11 @@ def teachers():
     if request.method == "POST":
         data = request.get_json()
         try:
-            hashed_pw = generate_password_hash(data["password"])
             conn = get_db()
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO teachers (username, password, fullname) VALUES (%s,%s,%s)",
-                (data["username"], hashed_pw, data["fullname"])
+                (data["username"], data["password"], data["fullname"])
             )
             conn.commit()
             cursor.close()
@@ -935,7 +932,6 @@ def teachers():
         except Error as e:
             return jsonify({"status":"error","message":str(e)}),500
 
-
 @app.route("/api/teachers/<int:teacher_id>", methods=["PUT","DELETE"])
 def teacher_detail(teacher_id):
     if request.method == "PUT":
@@ -943,20 +939,16 @@ def teacher_detail(teacher_id):
         try:
             conn = get_db()
             cursor = conn.cursor()
-
-            # Only update password if provided
             if "password" in data and data["password"]:
-                hashed_pw = generate_password_hash(data["password"])
                 cursor.execute(
                     "UPDATE teachers SET username=%s, password=%s, fullname=%s WHERE id=%s",
-                    (data["username"], hashed_pw, data["fullname"], teacher_id)
+                    (data["username"], data["password"], data["fullname"], teacher_id)
                 )
             else:
                 cursor.execute(
                     "UPDATE teachers SET username=%s, fullname=%s WHERE id=%s",
                     (data["username"], data["fullname"], teacher_id)
                 )
-
             conn.commit()
             cursor.close()
             conn.close()
