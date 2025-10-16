@@ -81,11 +81,12 @@ def dashboard():
     )
 
 # ---------------- DATA REPORT ----------------
-@app.route("/data-report", methods=["GET"])
+@app.route("/data-report")
 def data_report():
     if "teacher_id" not in session:
         return redirect(url_for("login"))
 
+    section_id = request.args.get("section_id", type=int)
     data = []
     classes = []
     classname = None
@@ -93,21 +94,14 @@ def data_report():
     try:
         conn = get_db()
         with conn.cursor(dictionary=True) as cursor:
+
             cursor.execute("SELECT id, name FROM sections ORDER BY name")
             classes = cursor.fetchall() or []
-
-            section_id = request.args.get("section_id")
-            if section_id:
-                try:
-                    section_id = int(section_id)
-                except ValueError:
-                    section_id = None
 
             if section_id:
                 cursor.execute("SELECT name FROM sections WHERE id = %s", (section_id,))
                 section = cursor.fetchone()
-                if section:
-                    classname = section.get("name")
+                classname = section.get("name") if section else None
 
                 cursor.execute("""
                     SELECT st.name AS student_name, s.name AS section_name,

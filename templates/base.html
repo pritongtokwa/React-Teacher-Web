@@ -13,7 +13,10 @@
                 <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">VIEW SCORES</button>
             </form>
             <form action="/data-report">
-                <button type="submit" class="{% if current_page == 'data-report' %}active{% endif %}">DATA REPORT</button>
+                <input type="hidden" name="section_id" value="1">
+                <button type="submit" class="{% if current_page == 'data-report' %}active{% endif %}">
+                    DATA REPORT
+                </button>
             </form>
             <form action="/create-class">
                 <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">CREATE SECTION</button>

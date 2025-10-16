@@ -317,3 +317,26 @@ body {
     font-family: inherit;
     font-size: inherit;
 }
+
+.main {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.data-table {
+    overflow-x: auto;
+}
+
+.data-table::-webkit-scrollbar {
+    height: 8px;
+}
+.data-table::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+.data-table::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+.data-table::-webkit-scrollbar-track {
+    background: #eee;
+}
