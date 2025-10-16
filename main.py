@@ -101,11 +101,11 @@ def data_report():
 
             cursor.execute("""
                 SELECT s.name AS student_name, sec.name AS section_name,
-                       sc.minigame1_first, sc.minigame1_best, sc.minigame1_attempts,
-                       sc.minigame2_first, sc.minigame2_best, sc.minigame2_attempts,
-                       sc.minigame3_first, sc.minigame3_best, sc.minigame3_attempts,
-                       sc.minigame4_first, sc.minigame4_best, sc.minigame4_attempts,
-                       sc.quiz
+                    sc.minigame1_first, sc.minigame1_best, sc.minigame1_attempts,
+                    sc.minigame2_first, sc.minigame2_best, sc.minigame2_attempts,
+                    sc.minigame3_first, sc.minigame3_best, sc.minigame3_attempts,
+                    sc.minigame4_first, sc.minigame4_best, sc.minigame4_attempts,
+                    sc.quiz_score
                 FROM scores sc
                 JOIN students s ON sc.student_id = s.id
                 JOIN sections sec ON s.section_id = sec.id
@@ -163,9 +163,9 @@ def class_view(section_id):
             try:
                 cursor.execute("""
                     SELECT st.name AS student_name, s.name AS section_name,
-                           sc.minigame1_best, sc.minigame2_best,
-                           sc.minigame3_best, sc.minigame4_best,
-                           sc.quiz
+                        sc.minigame1_best, sc.minigame2_best,
+                        sc.minigame3_best, sc.minigame4_best,
+                        sc.quiz_score
                     FROM students st
                     LEFT JOIN scores sc ON st.id = sc.student_id
                     JOIN sections s ON st.section_id = s.id
@@ -383,7 +383,7 @@ def submit_score():
                     values.append(score)
 
                     updates.append(
-                        f"minigame{i}_first = CASE WHEN minigame{i}_first IS NULL AND %s > 0 THEN %s ELSE minigame{i}_first END"
+                        f"minigame{i}_first = CASE WHEN (minigame{i}_first IS NULL OR minigame{i}_first = 0) AND %s > 0 THEN %s ELSE minigame{i}_first END"
                     )
                     values.extend([score, score])
 
