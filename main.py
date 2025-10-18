@@ -474,14 +474,20 @@ def create_student():
         if password1 != password2:
             error = "Passwords do not match."
         else:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO students (name, student_number, section_id, password) VALUES (%s, %s, %s, %s)",
-                    (studname, studnum, section_id, password1)
-                )
-                conn.commit()
-            conn.close()
-            return redirect(url_for("create_student"))
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT id FROM students WHERE student_number = %s", (studnum,))
+                existing = cursor.fetchone()
+
+                if existing:
+                    error = "A student with that student number already exists."
+                else:
+                    cursor.execute(
+                        "INSERT INTO students (name, student_number, section_id, password) VALUES (%s, %s, %s, %s)",
+                        (studname, studnum, section_id, password1)
+                    )
+                    conn.commit()
+                    conn.close()
+                    return redirect(url_for("create_student"))
 
     conn.close()
     return render_template("createstudent.html", error=error, sections=sections, current_page="create-student")
