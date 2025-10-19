@@ -756,7 +756,7 @@ def export_data_report(class_name):
     except Exception as e:
         print("Export report error:", e)
         return f"Error exporting report: {e}", 500
-
+        
 # ---------------- EXTERNAL UPLOAD (for PHP site) ----------------
 @app.route("/api/upload-students", methods=["POST"])
 def api_upload_students():
@@ -770,6 +770,7 @@ def api_upload_students():
     file.save(filepath)
 
     try:
+        import re
         df = pd.read_excel(filepath)
         headers = [h.lower() for h in df.columns]
         required = ["student_number", "name", "section", "password"]
@@ -781,11 +782,26 @@ def api_upload_students():
         with conn.cursor() as cursor:
             added = 0
             skipped = 0
-            for _, row in df.iterrows():
+            skipped_rows = []
+
+            for i, row in df.iterrows():
                 student_number = str(row["student_number"]).strip()
                 name = str(row["name"]).strip()
                 section_name = str(row["section"]).strip()
                 password = str(row["password"]).strip()
+
+                if not re.match(r"^[A-Za-z. ]+$", name):
+                    skipped += 1
+                    skipped_rows.append(f"Row {i+2}: invalid name '{name}'")
+                    continue
+                if not re.match(r"^\d{12}$", student_number):
+                    skipped += 1
+                    skipped_rows.append(f"Row {i+2}: invalid student number '{student_number}'")
+                    continue
+                if not re.match(r"^\d{1,8}$", password):
+                    skipped += 1
+                    skipped_rows.append(f"Row {i+2}: invalid password '{password}'")
+                    continue
 
                 cursor.execute("SELECT id FROM sections WHERE name=%s", (section_name,))
                 result = cursor.fetchone()
@@ -799,6 +815,7 @@ def api_upload_students():
                 cursor.execute("SELECT id FROM students WHERE student_number=%s", (student_number,))
                 if cursor.fetchone():
                     skipped += 1
+                    skipped_rows.append(f"Row {i+2}: duplicate student number '{student_number}'")
                     continue
 
                 cursor.execute(
@@ -809,7 +826,17 @@ def api_upload_students():
 
             conn.commit()
         conn.close()
-        return jsonify({"status": "success", "message": f"{added} students added, {skipped} skipped."})
+
+        message = f"{added} students added, {skipped} skipped."
+        if skipped_rows:
+            return jsonify({
+                "status": "partial_success",
+                "message": message,
+                "skipped_rows": skipped_rows
+            })
+        else:
+            return jsonify({"status": "success", "message": message})
+
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error: {e}"}), 500
 
