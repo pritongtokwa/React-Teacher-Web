@@ -9,11 +9,18 @@
             {% for sec in classes %}
             <form action="{{ url_for('data_report') }}" method="get" style="display: inline-block; margin-right: 10px;">
                 <input type="hidden" name="section_id" value="{{ sec.id }}">
-                <button type="submit" class="{% if classname and classname == sec.name %}active{% endif %}" style="background-color:#444; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">
+                <button type="submit" class="{% if classname and classname == sec.name %}active{% endif %}" style="padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">
                     {{ sec.name }}
                 </button>
             </form>
             {% endfor %}
+
+            {% if classname %}
+            <br><br>
+            <form action="{{ url_for('export_data_report', class_name=classname) }}" method="get" style="margin-bottom: 15px;">
+                <button type="submit">Export Data Report to Excel</button>
+            </form>
+            {% endif %}
         </div>
 
         {% if data %}

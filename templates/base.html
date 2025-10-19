@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Teacher Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -10,31 +11,31 @@
         {% if not hide_sidebar %}
         <div class="sidebar">
             <form action="/manage-data">
-                <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">VIEW SCORES</button>
+                <button type="submit" class="{% if current_page == 'manage-data' %}active{% endif %}">View Scores</button>
             </form>
             <form action="/data-report">
                 <input type="hidden" name="section_id" value="1">
                 <button type="submit" class="{% if current_page == 'data-report' %}active{% endif %}">
-                    DATA REPORT
+                    Data Report
                 </button>
             </form>
             <form action="/create-class">
-                <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">CREATE SECTION</button>
+                <button type="submit" class="{% if current_page == 'create-class' %}active{% endif %}">Create Section</button>
             </form>
             <form action="/create-student">
-                <button type="submit" class="{% if current_page == 'create-student' %}active{% endif %}">CREATE STUDENT ACCOUNT</button>
+                <button type="submit" class="{% if current_page == 'create-student' %}active{% endif %}">Create Student Account</button>
             </form>
             <form action="/create-quiz">
-                <button type="submit" class="{% if current_page == 'create-quiz' %}active{% endif %}">CREATE QUIZ</button>
+                <button type="submit" class="{% if current_page == 'create-quiz' %}active{% endif %}">Create Quiz</button>
             </form>
             <form action="/edit-quiz">
-                <button type="submit" class="{% if current_page == 'edit-quiz' %}active{% endif %}">EDIT QUIZ</button>
+                <button type="submit" class="{% if current_page == 'edit-quiz' %}active{% endif %}">Edit Quiz</button>
             </form>
             <form action="/about">
-                <button type="submit" class="{% if current_page == 'about' %}active{% endif %}">ABOUT</button>
+                <button type="submit" class="{% if current_page == 'about' %}active{% endif %}">About</button>
             </form>
             <form action="/logout">
-                <button type="submit">QUIT</button>
+                <button type="submit">Quit</button>
             </form>
         </div>
         {% endif %}

@@ -9,6 +9,13 @@
                 <button type="submit" class="{% if classname and classname == sec.name %}active{% endif %}">{{ sec.name }}</button>
             </form>
             {% endfor %}
+
+            {% if classname %}
+            <br><br>
+            <form action="{{ url_for('export_class_data', class_name=classname) }}" method="get" style="display:inline;">
+                <button type="submit">Export to Excel</button>
+            </form>
+            {% endif %}
         </div>
         <h2>{{ classname }} - Student Scores</h2>
         {% if data %}

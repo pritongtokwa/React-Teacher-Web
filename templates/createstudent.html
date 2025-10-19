@@ -4,17 +4,34 @@
 <div class="main">
     <div class="popup-page">
         <div class="popup-createstudent">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" style="margin-bottom: 15px; padding: 10px; border-radius: 6px;
+                            {% if category == 'success' %}background-color: #d1fae5; color: #065f46;
+                            {% elif category == 'error' %}background-color: #fee2e2; color: #991b1b;
+                            {% elif category == 'warning' %}background-color: #fef3c7; color: #92400e;
+                            {% endif %}">
+                            {{ message|safe }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             {% if error %}
                 <p style="color: red; font-weight: bold;">{{ error }}</p>
             {% endif %}
 
-            <!-- Manual Create Student Form -->
             <form method="POST" class="createclass-form">
                 <br><h4>Enter Student Name</h4>
-                <input type="text" name="studname" placeholder="Student Name" required><br>
+                <input type="text" name="studname" placeholder="Student Name" required
+                pattern="[A-Za-z. ]+" title="Only letters, spaces, and periods allowed.">
 
                 <h4>Enter Student Number</h4>
-                <input type="text" name="studnum" placeholder="Student Number" required pattern="\d*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><br>
+                <input type="text" name="studnum" placeholder="Student Number" required
+                pattern="\d{12}" maxlength="12" inputmode="numeric"
+                title="Student number must be exactly 12 digits.">
 
                 <h4>Select Section</h4>
                 <select id="section-dropdown" name="section" required>
@@ -25,19 +42,23 @@
                 </select><br>
 
                 <h4>Create Password</h4>
-                <input type="password" name="password1" placeholder="Password" required><br>
+                <input type="password" name="password1" placeholder="Password" required
+                pattern="\d{1,8}" maxlength="8" inputmode="numeric"
+                title="Password must be numeric (max 8 digits)">
 
                 <h4>Confirm Password</h4>
-                <input type="password" name="password2" placeholder="Confirm Password" required><br>
-
+                <input type="password" name="password2" placeholder="Confirm Password" required
+                pattern="\d{1,8}" maxlength="8" inputmode="numeric"
+                title="Password must be numeric (max 8 digits)">
+                
                 <button type="submit">Create</button><br>
             </form>
 
-            <!-- Excel Upload Form -->
             <form method="POST" class="createclass-form" action="{{ url_for('upload_students') }}" enctype="multipart/form-data">
                 <b>Upload Excel to Add Multiple Students</b>
                 <input type="file" name="excel_file" accept=".xlsx,.xls" required><br>
-                <button type="submit">Upload</button>
+                <button type="submit">Upload</button><br>
+                <a href="{{ url_for('static', filename='students_template.xlsx') }}" download class="download-template-btn">Download Excel Template</a>
             </form>
 
             <script>
@@ -46,7 +67,7 @@
                     const response = await fetch("/api/sections-dropdown");
                     if (!response.ok) throw new Error("Failed to load sections");
                     const sections = await response.json();
-                    const dropdown = document.getElementById("section-dropdown"); // ✅ fixed ID
+                    const dropdown = document.getElementById("section-dropdown");
                     dropdown.innerHTML = '<option value="">-- Choose Section --</option>';
                     sections.forEach(sec => {
                         dropdown.innerHTML += `<option value="${sec.id}">${sec.name}</option>`;
@@ -61,6 +82,5 @@
 
         </div>
     </div>
-    <div class="bottom-text">ECO HEROES</div>
 </div>
 {% endblock %}

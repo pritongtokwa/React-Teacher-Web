@@ -471,17 +471,30 @@ def create_student():
         password1 = request.form.get("password1")
         password2 = request.form.get("password2")
 
-        if password1 != password2:
+        import re
+        if not re.match(r"^[A-Za-z. ]+$", studname):
+            error = "Name must only contain letters, spaces, and periods."
+        elif not re.match(r"^\d{12}$", studnum):
+            error = "Student number must be exactly 12 digits."
+        elif not re.match(r"^\d{1,8}$", password1):
+            error = "Password must be numeric and up to 8 digits only."
+        elif password1 != password2:
             error = "Passwords do not match."
         else:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO students (name, student_number, section_id, password) VALUES (%s, %s, %s, %s)",
-                    (studname, studnum, section_id, password1)
-                )
-                conn.commit()
-            conn.close()
-            return redirect(url_for("create_student"))
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT id FROM students WHERE student_number = %s", (studnum,))
+                existing = cursor.fetchone()
+
+                if existing:
+                    error = "A student with that student number already exists."
+                else:
+                    cursor.execute(
+                        "INSERT INTO students (name, student_number, section_id, password) VALUES (%s, %s, %s, %s)",
+                        (studname, studnum, section_id, password1)
+                    )
+                    conn.commit()
+                    conn.close()
+                    return redirect(url_for("create_student"))
 
     conn.close()
     return render_template("createstudent.html", error=error, sections=sections, current_page="create-student")
@@ -520,11 +533,27 @@ def upload_students():
         with conn.cursor() as cursor:
             added_students = 0
             skipped_students = 0
-            for _, row in df.iterrows():
+            skipped_details = []
+
+            for index, row in df.iterrows():
                 student_number = str(row[col_map["student_number"]]).strip()
                 name = str(row[col_map["name"]]).strip()
                 section_name = str(row[col_map["section"]]).strip()
                 password = str(row[col_map["password"]]).strip()
+
+                import re
+                if not re.match(r"^[A-Za-z. ]+$", name):
+                    skipped_students += 1
+                    skipped_details.append(f"Row {index+2}: Invalid name")
+                    continue
+                if not re.match(r"^\d{12}$", student_number):
+                    skipped_students += 1
+                    skipped_details.append(f"Row {index+2}: Student number must be exactly 12 digits")
+                    continue
+                if not re.match(r"^\d{1,8}$", password):
+                    skipped_students += 1
+                    skipped_details.append(f"Row {index+2}: Password must be numeric (max 8 digits)")
+                    continue
 
                 cursor.execute("SELECT id FROM sections WHERE name=%s", (section_name,))
                 result = cursor.fetchone()
@@ -538,6 +567,7 @@ def upload_students():
                 cursor.execute("SELECT id FROM students WHERE student_number=%s", (student_number,))
                 if cursor.fetchone():
                     skipped_students += 1
+                    skipped_details.append(f"Row {index+2}: Duplicate student number")
                     continue
 
                 cursor.execute(
@@ -548,12 +578,184 @@ def upload_students():
 
             conn.commit()
         conn.close()
-        flash(f"{added_students} students added successfully! {skipped_students} duplicates skipped.", "success")
+
+        message = f"{added_students} students added successfully."
+        if skipped_students > 0:
+            message += f" {skipped_students} rows skipped due to validation errors."
+
+        if skipped_details:
+            preview = "<br>".join(skipped_details[:10])
+            if len(skipped_details) > 10:
+                preview += "<br>...and more."
+            flash(f"{message}<br><br><b>Skipped Rows:</b><br>{preview}", "warning")
+        else:
+            flash(message, "success")
 
     except Exception as e:
         flash(f"Error processing Excel file: {e}", "error")
 
     return redirect(url_for("create_student"))
+
+# ---------------- EXPORT DATA (EXCEL) ----------------
+from flask import Response
+import io
+from openpyxl import Workbook
+
+@app.route("/export/<class_name>")
+def export_class_data(class_name):
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+    
+        cursor.execute("""
+            SELECT st.name AS student_name,
+                   sec.name AS section_name,
+                   sc.minigame1_best,
+                   sc.minigame2_best,
+                   sc.minigame3_best,
+                   sc.minigame4_best,
+                   sc.quiz_score
+            FROM students st
+            JOIN sections sec ON st.section_id = sec.id
+            LEFT JOIN scores sc ON st.id = sc.student_id
+            WHERE sec.name = %s
+        """, (class_name,))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        if not rows:
+            return "No data found for this class.", 404
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"{class_name} Scores"
+
+        headers = [
+            "Student Name", "Section", "Minigame 1 (Best)", "Minigame 2 (Best)",
+            "Minigame 3 (Best)", "Minigame 4 (Best)", "Quiz Score"
+        ]
+        ws.append(headers)
+
+        for row in rows:
+            ws.append([
+                row["student_name"],
+                row["section_name"],
+                row.get("minigame1_best", 0) or 0,
+                row.get("minigame2_best", 0) or 0,
+                row.get("minigame3_best", 0) or 0,
+                row.get("minigame4_best", 0) or 0,
+                row.get("quiz_score", 0) or 0
+            ])
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return Response(
+            output.getvalue(),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={class_name}_scores.xlsx"
+            }
+        )
+
+    except Exception as e:
+        print("Export error:", e)
+        return f"Error exporting data: {e}", 500
+
+# ---------------- EXPORT DATA REPORT (EXCEL) ----------------
+@app.route("/export-report/<class_name>")
+def export_data_report(class_name):
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT st.name AS student_name,
+                   sec.name AS section_name,
+                   sc.minigame1_first,
+                   sc.minigame1_best,
+                   sc.minigame1_attempts,
+                   sc.minigame2_first,
+                   sc.minigame2_best,
+                   sc.minigame2_attempts,
+                   sc.minigame3_first,
+                   sc.minigame3_best,
+                   sc.minigame3_attempts,
+                   sc.minigame4_first,
+                   sc.minigame4_best,
+                   sc.minigame4_attempts,
+                   sc.quiz_score
+            FROM students st
+            JOIN sections sec ON st.section_id = sec.id
+            LEFT JOIN scores sc ON st.id = sc.student_id
+            WHERE sec.name = %s
+        """, (class_name,))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        if not rows:
+            return "No data found for this class.", 404
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"{class_name} Report"
+
+        headers = [
+            "Student Name", "Section",
+            "Minigame 1 (First)", "Minigame 1 (Best)", "Attempts", "Improvement",
+            "Minigame 2 (First)", "Minigame 2 (Best)", "Attempts", "Improvement",
+            "Minigame 3 (First)", "Minigame 3 (Best)", "Attempts", "Improvement",
+            "Minigame 4 (First)", "Minigame 4 (Best)", "Attempts", "Improvement",
+            "Quiz Score"
+        ]
+        ws.append(headers)
+
+        for r in rows:
+            ws.append([
+                r["student_name"],
+                r["section_name"],
+
+                r.get("minigame1_first", 0) or 0,
+                r.get("minigame1_best", 0) or 0,
+                r.get("minigame1_attempts", 0) or 0,
+                (r["minigame1_best"] or 0) - (r["minigame1_first"] or 0),
+
+                r.get("minigame2_first", 0) or 0,
+                r.get("minigame2_best", 0) or 0,
+                r.get("minigame2_attempts", 0) or 0,
+                (r["minigame2_best"] or 0) - (r["minigame2_first"] or 0),
+
+                r.get("minigame3_first", 0) or 0,
+                r.get("minigame3_best", 0) or 0,
+                r.get("minigame3_attempts", 0) or 0,
+                (r["minigame3_best"] or 0) - (r["minigame3_first"] or 0),
+
+                r.get("minigame4_first", 0) or 0,
+                r.get("minigame4_best", 0) or 0,
+                r.get("minigame4_attempts", 0) or 0,
+                (r["minigame4_best"] or 0) - (r["minigame4_first"] or 0),
+
+                r.get("quiz_score", 0) or 0
+            ])
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return Response(
+            output.getvalue(),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={class_name}_data_report.xlsx"
+            }
+        )
+
+    except Exception as e:
+        print("Export report error:", e)
+        return f"Error exporting report: {e}", 500
 
 # ---------------- EXTERNAL UPLOAD (for PHP site) ----------------
 @app.route("/api/upload-students", methods=["POST"])
